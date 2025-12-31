@@ -5,29 +5,42 @@ import { useNavigate } from "react-router-dom";
 export default function Todo() {
   const [todos, setTodos] = useState([]);
   const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
   
   const fetchTodos = async () => {
-    const res = await axios.get(
-      import.meta.env.VITE_API_URL + "/todos",
-      {
+    if (!token) return navigate("/login");
+    try {
+      const res = await axios.get(import.meta.env.VITE_API_URL + "/todos", {
         headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    setTodos(res.data);
+      });
+      setTodos(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch todos. Please login again.");
+      navigate("/login");
+    }
   };
 
   const addTodo = async () => {
     if (!text) return;
-    await axios.post(
-      import.meta.env.VITE_API_URL + "/todos",
-      { text },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setText("");
-    fetchTodos();
+    setLoading(true);
+    try {
+      await axios.post(
+        import.meta.env.VITE_API_URL + "/todos",
+        { text },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setText("");
+      fetchTodos();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add todo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
@@ -44,10 +57,7 @@ export default function Todo() {
       <div className="max-w-md mx-auto bg-white p-4 rounded shadow">
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-bold">My Todos</h2>
-          <button
-            onClick={logout}
-            className="text-red-600 text-sm"
-          >
+          <button onClick={logout} className="text-red-600 text-sm">
             Logout
           </button>
         </div>
@@ -61,18 +71,16 @@ export default function Todo() {
           />
           <button
             onClick={addTodo}
-            className="bg-blue-600 text-white px-4 ml-2"
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 ml-2 disabled:opacity-50"
           >
-            Add
+            {loading ? "Adding..." : "Add"}
           </button>
         </div>
 
         <ul>
           {todos.map((t) => (
-            <li
-              key={t._id}
-              className="border-b py-2"
-            >
+            <li key={t._id} className="border-b py-2">
               {t.text}
             </li>
           ))}

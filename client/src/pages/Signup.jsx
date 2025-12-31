@@ -6,17 +6,30 @@ export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // loading state
   const navigate = useNavigate();
 
   const signup = async () => {
+    if (!name || !email || !password) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    setLoading(true);
     try {
-      await axios.post(
-        import.meta.env.VITE_API_URL + "/auth/signup",
-        { name, email, password }
-      );
+      await axios.post(import.meta.env.VITE_API_URL + "/auth/signup", {
+        name,
+        email,
+        password
+      });
+
+      alert("Signup successful! Please login.");
       navigate("/login");
     } catch (err) {
-      alert("Signup failed");
+      console.error(err);
+      alert(err.response?.data?.message || "Signup failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,12 +41,14 @@ export default function Signup() {
         <input
           className="border p-2 w-full mb-2"
           placeholder="Name"
+          value={name}
           onChange={(e) => setName(e.target.value)}
         />
 
         <input
           className="border p-2 w-full mb-2"
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
@@ -41,14 +56,16 @@ export default function Signup() {
           className="border p-2 w-full mb-3"
           type="password"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
         <button
           onClick={signup}
-          className="bg-blue-600 text-white w-full py-2 rounded"
+          disabled={loading}
+          className="bg-blue-600 text-white w-full py-2 rounded disabled:opacity-50"
         >
-          Create Account
+          {loading ? "Creating..." : "Create Account"}
         </button>
 
         <p className="text-sm text-center mt-3">

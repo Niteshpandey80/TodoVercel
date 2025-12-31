@@ -5,19 +5,32 @@ import { useNavigate, Link } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // loading state
   const navigate = useNavigate();
 
   const login = async () => {
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await axios.post(
         import.meta.env.VITE_API_URL + "/auth/login",
         { email, password }
       );
 
+      // Save token in localStorage
       localStorage.setItem("token", res.data.token);
+
+      // Navigate to homepage
       navigate("/");
     } catch (err) {
-      alert("Invalid credentials");
+      console.error(err);
+      alert(err.response?.data?.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,6 +42,7 @@ export default function Login() {
         <input
           className="border p-2 w-full mb-2"
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
@@ -36,14 +50,16 @@ export default function Login() {
           className="border p-2 w-full mb-3"
           type="password"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
         <button
           onClick={login}
-          className="bg-green-600 text-white w-full py-2 rounded"
+          disabled={loading}
+          className="bg-green-600 text-white w-full py-2 rounded disabled:opacity-50"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         <p className="text-sm text-center mt-3">

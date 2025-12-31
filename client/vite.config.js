@@ -1,16 +1,9 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 5173,
-    open: true, // automatically opens in browser on npm run dev
-  },
-  resolve: {
-    alias: {
-      '@': '/src', // allows import like "@/pages/Signup.jsx"
-    },
-  },
-});
+  plugins: [tailwindcss(),
+react()],
+})

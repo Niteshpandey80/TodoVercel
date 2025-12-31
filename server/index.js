@@ -6,11 +6,10 @@ import authRoutes from "./routes/auth.js";
 import todoRoutes from "./routes/todo.js";
 
 dotenv.config();
-connectDB();
 
 const app = express();
 
-// ✅ CORRECT CORS CONFIG
+// ✅ CORS (works for localhost + vercel)
 app.use(
   cors({
     origin: [
@@ -24,7 +23,6 @@ app.use(
 );
 
 app.use(express.json());
-app.options("*", cors());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
@@ -33,7 +31,8 @@ app.get("/", (req, res) => {
   res.send("API Running...");
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// 🔥 CONNECT DB ON DEMAND (SAFE FOR SERVERLESS)
+connectDB();
+
+// 🔥 EXPORT APP (NO app.listen)
+export default app;

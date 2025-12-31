@@ -6,15 +6,14 @@ import authRoutes from "./routes/auth.js";
 import todoRoutes from "./routes/todo.js";
 
 dotenv.config();
-
 const app = express();
 
-// ✅ Allow local dev + deployed frontend
+// 🔥 CORS CONFIG FOR LOCAL + DEPLOYED FRONTEND
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "https://todo-vercel-valf.vercel.app"
+      "http://localhost:5173", // dev
+      "https://todo-vercel-valf.vercel.app" // deployed frontend
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true
@@ -32,4 +31,4 @@ app.get("/", (req, res) => {
 
 connectDB();
 
-export default app; // NO app.listen() for Vercel serverless
+export default app; // ✅ Vercel serverless requires export, no app.listen()

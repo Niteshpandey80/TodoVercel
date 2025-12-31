@@ -1,16 +1,17 @@
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
-export const protect =(req,res,next)=>{
-  try{
-    const token = req.headers.authorization?.split("")[1];
-    if(!token){
-        return res.status(4011).json({message:"No token provided"})
+export const protect = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1]; // ✅ split by space
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
     }
-    const decoded = jwt.verify(token , process.env.JWT_SECRET);
-    req.userId = decoded.id;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.id; // or attach full user: req.user = await User.findById(decoded.id)
     next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
   }
-  catch(error){
-   res.status(401).json({message:"Invalid token"})
-  }
-}
+};

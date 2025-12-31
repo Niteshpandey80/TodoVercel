@@ -6,12 +6,21 @@ export default function Todo() {
   const [todos, setTodos] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true); // loading todos
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
-  
+
+  // Helper to handle 401 errors
+  const handleUnauthorized = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  // Fetch todos
   const fetchTodos = async () => {
-    if (!token) return navigate("/login");
+    if (!token) return handleUnauthorized();
+    setFetching(true);
     try {
       const res = await axios.get(import.meta.env.VITE_API_URL + "/todos", {
         headers: { Authorization: `Bearer ${token}` },
@@ -19,11 +28,17 @@ export default function Todo() {
       setTodos(res.data);
     } catch (err) {
       console.error(err);
-      alert("Failed to fetch todos. Please login again.");
-      navigate("/login");
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+      } else {
+        alert("Failed to fetch todos. Try again later.");
+      }
+    } finally {
+      setFetching(false);
     }
   };
 
+  // Add a new todo
   const addTodo = async () => {
     if (!text) return;
     setLoading(true);
@@ -34,15 +49,31 @@ export default function Todo() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setText("");
-      fetchTodos();
+      fetchTodos(); // refresh todos
     } catch (err) {
       console.error(err);
-      alert("Failed to add todo.");
+      if (err.response?.status === 401) handleUnauthorized();
+      else alert("Failed to add todo.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Delete a todo
+  const deleteTodo = async (id) => {
+    try {
+      await axios.delete(import.meta.env.VITE_API_URL + `/todos/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchTodos();
+    } catch (err) {
+      console.error(err);
+      if (err.response?.status === 401) handleUnauthorized();
+      else alert("Failed to delete todo.");
+    }
+  };
+
+  // Logout
   const logout = () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -51,6 +82,8 @@ export default function Todo() {
   useEffect(() => {
     fetchTodos();
   }, []);
+
+  if (fetching) return <div className="p-6 text-center">Loading todos...</div>;
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -78,13 +111,23 @@ export default function Todo() {
           </button>
         </div>
 
-        <ul>
-          {todos.map((t) => (
-            <li key={t._id} className="border-b py-2">
-              {t.text}
-            </li>
-          ))}
-        </ul>
+        {todos.length === 0 ? (
+          <p className="text-center text-gray-500">No todos yet</p>
+        ) : (
+          <ul>
+            {todos.map((t) => (
+              <li key={t._id} className="border-b py-2 flex justify-between items-center">
+                <span>{t.text}</span>
+                <button
+                  onClick={() => deleteTodo(t._id)}
+                  className="text-red-500 text-sm"
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
